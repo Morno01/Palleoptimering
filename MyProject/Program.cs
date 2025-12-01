@@ -2,6 +2,9 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Konfigurer URL'er
+builder.WebHost.UseUrls("http://localhost:5000");
+
 // Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -23,8 +26,8 @@ using (var scope = app.Services.CreateScope())
         {
             Console.WriteLine("❌ Kan ikke forbinde til databasen!");
         }
-        }
-        catch (Exception ex)
+    }
+    catch (Exception ex)
     {
         Console.WriteLine($"❌ Database fejl: {ex.Message}");
     }
@@ -32,9 +35,22 @@ using (var scope = app.Services.CreateScope())
 
 app.MapGet("/", () => "Hello World!");
 
+// Åbn browser automatisk i Development mode
+if (app.Environment.IsDevelopment())
+{
+    var url = "http://localhost:5000";
+    Console.WriteLine($"🌐 Åbner browser på: {url}");
+
+    // For Windows
+    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+    {
+        FileName = url,
+        UseShellExecute = true
+    });
+}
+
 app.Run();
 
-// DbContext definition
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

@@ -33,7 +33,30 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapGet("/", () => "Hello World!");
+// Serve static files (CSS, JS, etc.)
+app.UseStaticFiles();
+
+// Debug: Vis hvor ASP.NET leder efter filer
+Console.WriteLine($"📁 Content Root: {app.Environment.ContentRootPath}");
+Console.WriteLine($"📁 Web Root: {app.Environment.WebRootPath}");
+
+// Tjek om login.html eksisterer
+var loginPath = Path.Combine(app.Environment.WebRootPath, "login.html");
+Console.WriteLine($"🔍 Leder efter: {loginPath}");
+Console.WriteLine($"✅ Fil eksisterer: {File.Exists(loginPath)}");
+
+// List alle filer i wwwroot
+if (Directory.Exists(app.Environment.WebRootPath))
+{
+    Console.WriteLine("📄 Filer i wwwroot:");
+    foreach (var file in Directory.GetFiles(app.Environment.WebRootPath))
+    {
+        Console.WriteLine($"  - {Path.GetFileName(file)}");
+    }
+}
+
+// Route to login page - redirect til static fil
+app.MapGet("/", () => Results.Redirect("/login.html"));
 
 // Åbn browser automatisk i Development mode
 if (app.Environment.IsDevelopment())
@@ -41,7 +64,6 @@ if (app.Environment.IsDevelopment())
     var url = "http://localhost:5000";
     Console.WriteLine($"🌐 Åbner browser på: {url}");
 
-    // For Windows
     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
     {
         FileName = url,
@@ -56,7 +78,4 @@ public class ApplicationDbContext : DbContext
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
-
-    // Add your DbSet properties here
-    // Example: public DbSet<YourEntity> YourEntities { get; set; }
 }

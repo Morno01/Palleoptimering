@@ -1,54 +1,46 @@
-using Microsoft.EntityFrameworkCore;
-using PalleOptimering.Data;
+﻿using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== ADD SERVICES =====
-
-// Database
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure()
-    ));
-
-// Controllers og Views
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
-
-// API
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Register DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-// ===== CONFIGURE PIPELINE =====
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-
-app.MapControllers();
-app.MapRazorPages();
-
-// ===== SEED DATABASE =====
-
+// Test database forbindelse
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); // K�r migrations automatisk
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        var canConnect = dbContext.Database.CanConnect();
+        if (canConnect)
+        {
+            Console.WriteLine("✅ Database forbindelse er OK!");
+        }
+        else
+        {
+            Console.WriteLine("❌ Kan ikke forbinde til databasen!");
+        }
+        }
+        catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Database fejl: {ex.Message}");
+    }
 }
 
+app.MapGet("/", () => "Hello World!");
+
 app.Run();
+
+// DbContext definition
+public class ApplicationDbContext : DbContext
+{
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    // Add your DbSet properties here
+    // Example: public DbSet<YourEntity> YourEntities { get; set; }
+}

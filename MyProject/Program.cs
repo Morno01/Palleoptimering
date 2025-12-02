@@ -41,7 +41,7 @@ Console.WriteLine($"📁 Content Root: {app.Environment.ContentRootPath}");
 Console.WriteLine($"📁 Web Root: {app.Environment.WebRootPath}");
 
 // Tjek om login.html eksisterer
-var loginPath = Path.Combine(app.Environment.WebRootPath, "login.html");
+var loginPath = Path.Combine(app.Environment.WebRootPath, "login.cshtml");
 Console.WriteLine($"🔍 Leder efter: {loginPath}");
 Console.WriteLine($"✅ Fil eksisterer: {File.Exists(loginPath)}");
 
@@ -56,7 +56,7 @@ if (Directory.Exists(app.Environment.WebRootPath))
 }
 
 // Route to login page - redirect til static fil
-app.MapGet("/", () => Results.Redirect("/login.html"));
+app.MapGet("/", () => Results.Redirect("/login.cshtml"));
 
 // Åbn browser automatisk i Development mode
 if (app.Environment.IsDevelopment())

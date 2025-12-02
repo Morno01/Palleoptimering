@@ -8,8 +8,8 @@ namespace MyProject
     public class BrugerDto
     {
         public int Id { get; set; }
-        public string Email { get; set; } = "";
-        public string? PasswordHash { get; set; }
+        public string Brugernavn { get; set; } = "";
+        public string? Password { get; set; }
         public string? Navn { get; set; }
     }
 
@@ -20,15 +20,15 @@ namespace MyProject
         public Login(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new ArgumentNullException("DefaultConnection not found in configuration");
+                ?? throw new ArgumentNullException(nameof(configuration), "DefaultConnection not found in configuration");
         }
 
-        public async Task<BrugerDto?> GetBrugerByEmailAsync(string email)
+        public async Task<BrugerDto?> GetBrugerByBrugernavnAsync(string brugernavn)
         {
-            const string sql = "SELECT Id, , Password, Navn FROM Brugere WHERE  = @email";
+            const string sql = "SELECT Id, Brugernavn, Password, Navn FROM Brugere WHERE Brugernavn = @brugernavn";
             await using var conn = new SqlConnection(_connectionString);
             await using var cmd = new SqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@email", email);
+            cmd.Parameters.AddWithValue("@brugernavn", brugernavn);
 
             await conn.OpenAsync();
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -37,8 +37,8 @@ namespace MyProject
                 return new BrugerDto
                 {
                     Id = reader.GetInt32(0),
-                    Email = reader.GetString(1),
-                    PasswordHash = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Brugernavn = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                    Password = reader.IsDBNull(2) ? null : reader.GetString(2),
                     Navn = reader.IsDBNull(3) ? null : reader.GetString(3)
                 };
             }
@@ -46,16 +46,14 @@ namespace MyProject
             return null;
         }
 
-        // Simple validator: compares given password with stored hash.
-        // Replace the comparison below with your hashing library (BCrypt, PBKDF2, etc.)
-        public async Task<bool> ValidateCredentialsAsync(string email, string password)
+        public async Task<bool> ValidateCredentialsAsync(string brugernavn, string password)
         {
-            var bruger = await GetBrugerByEmailAsync(email);
-            if (bruger == null || string.IsNullOrEmpty(bruger.PasswordHash)) return false;
+            var bruger = await GetBrugerByBrugernavnAsync(brugernavn);
+            if (bruger == null || string.IsNullOrEmpty(bruger.Password)) return false;
 
-            // TODO: Replace with secure hash verification
-            // Example (if you store BCrypt hashes): return BCrypt.Net.BCrypt.Verify(password, bruger.PasswordHash);
-            return bruger.PasswordHash == password; // <-- INSECURE fallback for testing only
+            // IMPORTANT: replace this with secure hashed verification in production.
+            // Example: install BCrypt.Net-Next and use BCrypt.Verify(password, bruger.Password)
+            return bruger.Password == password;
         }
     }
 }
